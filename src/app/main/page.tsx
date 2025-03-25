@@ -16,12 +16,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-
-const messageTypes = [
-  { value: "cold email", label: "Cold Email" },
-  { value: "cold message", label: "Cold Message" },
-  { value: "cover letter", label: "Cover Letter" },
-] as const
+import { 
+  formDataSchema, 
+  messageTypes, 
+  FormData,
+  rateLimitResponseSchema,
+  ipResponseSchema
+} from "@/lib/validations"
 
 const CHAR_LIMIT = 500
 
@@ -34,10 +35,10 @@ export default function MainPage() {
   const isLoading = useSelector((state: RootState) => state.firstResponse.loading)
   const responseError = useSelector((state: RootState) => state.firstResponse.error)
 
-  const [formData, setLocalFormData] = useState({
+  const [formData, setLocalFormData] = useState<FormData>({
     jobDescription: "",
     additionalInfo: "",
-    messageType: "",
+    messageType: "cold email", // Set a default value
   })
 
   const handleInputChange = (
@@ -45,25 +46,55 @@ export default function MainPage() {
     value: string
   ) => {
     if (value.length <= CHAR_LIMIT) {
-      setLocalFormData(prev => ({ ...prev, [field]: value }))
+      setLocalFormData((prev: FormData) => ({ ...prev, [field]: value }))
     }
   }
 
   const handleSubmit = async () => {
     try {
       setError("")
-      const response = await fetch('/api/ip')
-      const { ip } = await response.json()
       
-      dispatch(setFormData(formData))
+      // Validate form data
+      const validatedData = formDataSchema.parse(formData)
+
+      // Get and validate IP
+      const ipResponse = await fetch('/api/ip')
+      if (!ipResponse.ok) {
+        throw new Error('Failed to get IP address')
+      }
+      const ipData = await ipResponse.json()
+      const { ip } = ipResponseSchema.parse(ipData)
+      
+      // Check rate limit
+      const rateLimitResponse = await fetch('/api/rate-limit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ip }),
+      })
+
+      if (!rateLimitResponse.ok) {
+        throw new Error('Rate limit check failed')
+      }
+
+      const rateLimitData = await rateLimitResponse.json()
+      const { allowed, error: rateLimitError } = rateLimitResponseSchema.parse(rateLimitData)
+
+      if (!allowed) {
+        setError(rateLimitError || 'Daily request limit reached')
+        return
+      }
+
+      // If all validations pass, proceed with the request
+      dispatch(setFormData(validatedData))
       const result = await dispatch(generateFirstResponse({
-        ...formData,
+        ...validatedData,
         ip
       })).unwrap()
       
       router.push("/result")
-    } catch (error: any) {
-      // Check if the error is a rate limit error from the API
+    } catch (error:any) {
       if (error?.data?.error?.includes('Daily request limit reached') || 
           error?.message?.includes('Daily request limit reached')) {
         setError("You've reached your daily limit of 2 message generations. Please try again tomorrow!")
@@ -153,7 +184,7 @@ export default function MainPage() {
               <Select
                 value={formData.messageType}
                 onValueChange={(value: string) =>
-                  setLocalFormData({ ...formData, messageType: value })
+                  setLocalFormData({ ...formData, messageType: value as "cold email" | "cold message" | "cover letter"})
                 }
               >
                 <SelectTrigger>
@@ -177,7 +208,7 @@ export default function MainPage() {
                 !formData.additionalInfo ||
                 !formData.messageType
               }
-              className="w-full"
+              className="w-full cursor-pointer"
             >
               {isLoading ? "Generating..." : "Generate Message"}
             </Button>

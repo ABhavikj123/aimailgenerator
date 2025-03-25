@@ -1,43 +1,24 @@
 import { NextResponse } from 'next/server'
-import fs from 'fs'
-import path from 'path'
 
-interface RateLimitEntry {
-  count: number
-  timestamp: number
-}
+// In-memory store with automatic cleanup
+const rateLimits = new Map<string, { count: number; timestamp: number }>()
+const DAILY_LIMIT = 2
+const CLEANUP_INTERVAL = 24 * 60 * 60 * 1000 // 24 hours
 
-const DAILY_LIMIT = 2 // 2 requests per day
-const RATE_LIMIT_FILE = path.join(process.cwd(), 'data', 'rate-limits.json')
-
-// Ensure data directory exists
-const dataDir = path.join(process.cwd(), 'data')
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true })
-}
-
-// Initialize rate limits file if it doesn't exist
-if (!fs.existsSync(RATE_LIMIT_FILE)) {
-  fs.writeFileSync(RATE_LIMIT_FILE, JSON.stringify({}))
-}
-
-function loadRateLimits(): Record<string, RateLimitEntry> {
-  try {
-    const data = fs.readFileSync(RATE_LIMIT_FILE, 'utf-8')
-    return JSON.parse(data)
-  } catch (error) {
-    console.error('Error loading rate limits:', error)
-    return {}
+// Cleanup function to remove old entries
+function cleanup() {
+  const now = Date.now()
+  const today = new Date().setHours(0, 0, 0, 0)
+  
+  for (const [ip, data] of rateLimits.entries()) {
+    if (data.timestamp < today) {
+      rateLimits.delete(ip)
+    }
   }
 }
 
-function saveRateLimits(limits: Record<string, RateLimitEntry>) {
-  try {
-    fs.writeFileSync(RATE_LIMIT_FILE, JSON.stringify(limits, null, 2))
-  } catch (error) {
-    console.error('Error saving rate limits:', error)
-  }
-}
+// Run cleanup every 24 hours
+setInterval(cleanup, CLEANUP_INTERVAL)
 
 export async function POST(req: Request) {
   try {
@@ -53,17 +34,8 @@ export async function POST(req: Request) {
     const now = Date.now()
     const today = new Date().setHours(0, 0, 0, 0)
     
-    // Load current rate limits
-    const rateLimits = loadRateLimits()
-    
-    // Clean up old entries
-    Object.keys(rateLimits).forEach(storedIp => {
-      if (rateLimits[storedIp].timestamp < today) {
-        delete rateLimits[storedIp]
-      }
-    })
-
-    const current = rateLimits[ip] || { count: 0, timestamp: now }
+    // Get current rate limit data
+    const current = rateLimits.get(ip) || { count: 0, timestamp: now }
 
     // Reset if it's a new day
     if (current.timestamp < today) {
@@ -81,8 +53,7 @@ export async function POST(req: Request) {
 
     // Increment counter
     current.count++
-    rateLimits[ip] = current
-    saveRateLimits(rateLimits)
+    rateLimits.set(ip, current)
 
     return NextResponse.json({
       allowed: true,
