@@ -23,7 +23,6 @@ A powerful Next.js application that generates professional emails and messages u
 - **State Management**: Redux Toolkit
 - **UI Components**: Shadcn/ui
 - **AI Service**: Cohere AI
-- **Rate Limiting**: Custom implementation
 - **Notifications**: Sonner
 
 ## Getting Started
@@ -70,17 +69,15 @@ yarn dev
 3. Enter the job description and any additional information
 4. Click "Generate Message"
 5. Review the generated message
-6. Edit the message if needed
 7. Copy the final message to your clipboard
 
 ## API Rate Limits
 
-- Free tier: 5 million tokens per month
+
 - Rate limiting: 2 requests per user per day
 - Character limits:
   - Job Description: 500 characters
   - Additional Info: 500 characters
-  - Improvement requests: 100 characters
 
 ## Contributing
 

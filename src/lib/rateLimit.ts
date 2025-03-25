@@ -3,7 +3,7 @@ interface RateLimitEntry {
   timestamp: number
 }
 
-const DAILY_LIMIT = 4 // 2 generations + 2 updates per day
+const DAILY_LIMIT = 2 // 2 requests per day
 const rateLimits = new Map<string, RateLimitEntry>()
 
 export function checkRateLimit(ip: string): {
