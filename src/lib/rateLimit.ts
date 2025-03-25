@@ -1,48 +1,28 @@
-interface RateLimitEntry {
-  count: number
-  timestamp: number
-}
-
-const DAILY_LIMIT = 2 // 2 requests per day
-const rateLimits = new Map<string, RateLimitEntry>()
-
-export function checkRateLimit(ip: string): {
+export async function checkRateLimit(ip: string): Promise<{
   allowed: boolean
   remaining: number
   error?: string
-} {
-  const now = Date.now()
-  const today = new Date().setHours(0, 0, 0, 0)
-  
-  // Clean up old entries
-  for (const [storedIp, entry] of rateLimits.entries()) {
-    if (entry.timestamp < today) {
-      rateLimits.delete(storedIp)
+}> {
+  try {
+    const response = await fetch('/api/rate-limit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ip }),
+    })
+
+    if (!response.ok) {
+      throw new Error('Rate limit check failed')
     }
-  }
 
-  const current = rateLimits.get(ip) || { count: 0, timestamp: now }
-
-  // Reset if it's a new day
-  if (current.timestamp < today) {
-    current.count = 0
-    current.timestamp = now
-  }
-
-  if (current.count >= DAILY_LIMIT) {
+    return await response.json()
+  } catch (error) {
+    console.error('Rate limit error:', error)
     return {
       allowed: false,
       remaining: 0,
-      error: 'Daily request limit reached. Please try again tomorrow.'
+      error: 'Failed to check rate limit. Please try again later.'
     }
-  }
-
-  // Increment counter
-  current.count++
-  rateLimits.set(ip, current)
-
-  return {
-    allowed: true,
-    remaining: DAILY_LIMIT - current.count
   }
 } 

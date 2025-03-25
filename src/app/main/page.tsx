@@ -8,6 +8,7 @@ import { generateFirstResponse, setFormData } from "@/store/slices/firstResponse
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { CharacterCounter } from "@/components/CharacterCounter"
+import { X } from "lucide-react"
 import {
   Select,
   SelectContent,
@@ -28,6 +29,7 @@ export default function MainPage() {
   const router = useRouter()
   const dispatch = useDispatch<AppDispatch>()
   const [error, setError] = useState<string>("")
+  const [showInfoCard, setShowInfoCard] = useState(true)
   
   const isLoading = useSelector((state: RootState) => state.firstResponse.loading)
   const responseError = useSelector((state: RootState) => state.firstResponse.error)
@@ -54,20 +56,50 @@ export default function MainPage() {
       const { ip } = await response.json()
       
       dispatch(setFormData(formData))
-      await dispatch(generateFirstResponse({
+      const result = await dispatch(generateFirstResponse({
         ...formData,
         ip
       })).unwrap()
       
       router.push("/result")
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "An error occurred while generating the message")
+    } catch (error: any) {
+      // Check if the error is a rate limit error from the API
+      if (error?.data?.error?.includes('Daily request limit reached') || 
+          error?.message?.includes('Daily request limit reached')) {
+        setError("You've reached your daily limit of 2 message generations. Please try again tomorrow!")
+      } else {
+        setError("An error occurred while generating the message")
+      }
     }
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-3xl mx-auto">
+        {showInfoCard && (
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4 relative">
+            <button
+              onClick={() => setShowInfoCard(false)}
+              className="absolute top-2 right-2 text-blue-500 hover:text-blue-700"
+            >
+              <X size={20} />
+            </button>
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-blue-800">Usage Limit Notice</h3>
+                <div className="mt-2 text-sm text-blue-700">
+                  <p>To ensure fair usage during our testing phase, each user is limited to 2 message generations per day. This helps us maintain service quality and gather valuable feedback.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className="bg-card rounded-lg border shadow-sm p-6 md:p-8">
           <h1 className="mb-6 text-3xl font-bold">Message Generator</h1>
           
