@@ -46,27 +46,7 @@ export function Footer() {
           })}
         </div>
 
-        {/* Navigation Links */}
-        <div className="mb-8 flex justify-center space-x-8 text-sm">
-          <Link
-            href="/privacy"
-            className="text-muted-foreground transition-colors hover:text-primary"
-          >
-            Privacy Policy
-          </Link>
-          <Link
-            href="/terms"
-            className="text-muted-foreground transition-colors hover:text-primary"
-          >
-            Terms of Service
-          </Link>
-          <Link
-            href="/contact"
-            className="text-muted-foreground transition-colors hover:text-primary"
-          >
-            Contact
-          </Link>
-        </div>
+    
 
         {/* Copyright */}
         <div className="text-center">
