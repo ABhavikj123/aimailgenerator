@@ -55,6 +55,7 @@ export default function ResultPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Back Button */}
       <div className="mb-8">
         <Button
           variant="outline"
@@ -65,13 +66,12 @@ export default function ResultPage() {
         </Button>
       </div>
 
-      <div className="space-y-4">
-        <div className="p-6 bg-card rounded-lg border shadow-md">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4">
-            <h2 className="text-xl md:text-2xl font-bold mb-2 md:mb-0">
-              Generated Message
-            </h2>
-            <div className="flex flex-wrap gap-2">
+      <div className="space-y-4 w-full">
+        <div className="p-6 bg-card rounded-lg border shadow-md w-full">
+          {/* Heading & Buttons (responsive) */}
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 space-y-2 sm:space-y-0">
+            <h2 className="text-xl sm:text-2xl font-bold">Generated Message</h2>
+            <div className="flex flex-wrap gap-2 sm:justify-end">
               {!isEditing ? (
                 <>
                   <Button
@@ -114,14 +114,16 @@ export default function ResultPage() {
               )}
             </div>
           </div>
+
+          {/* Editing vs. Viewing */}
           {isEditing ? (
             <Textarea
               value={editedMessage}
               onChange={(e) => setEditedMessage(e.target.value)}
-              className="min-h-[200px] md:min-h-[300px] font-mono"
+              className="min-h-[200px] md:min-h-[300px] font-mono w-full"
             />
           ) : (
-            <div className="whitespace-pre-wrap font-mono text-sm md:text-base">
+            <div className="whitespace-pre-wrap break-words font-mono text-sm md:text-base">
               {currentMessage}
             </div>
           )}
