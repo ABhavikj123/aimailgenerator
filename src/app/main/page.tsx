@@ -124,7 +124,7 @@ export default function MainPage() {
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-blue-800">Usage Limit Notice</h3>
                 <div className="mt-2 text-sm text-blue-700">
-                  <p>To ensure fair usage during our testing phase, each user is limited to 1 message generations per day. This helps us maintain service quality and gather valuable feedback.</p>
+                  <p>To ensure fair usage during our testing phase, each user is limited to  message generations per day. This helps us maintain service quality and gather valuable feedback.</p>
                 </div>
               </div>
             </div>

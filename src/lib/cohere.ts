@@ -60,3 +60,11 @@ export async function generateWithCohere(prompt: string, maxTokens: number = 500
     }
   }
 } 
+export async function generateWithTimeout(prompt: string, maxTokens: number, timeoutMs: number = 8000) {
+  return Promise.race([
+    generateWithCohere(prompt, maxTokens),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Cohere API request timed out')), timeoutMs)
+    )
+  ]);
+}

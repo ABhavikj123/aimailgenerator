@@ -1,4 +1,4 @@
-import { checkRateLimit } from './rateLimit'
+import { generateWithCohere } from "./cohere"
 
 interface GenerateOptions {
   ip: string
@@ -14,16 +14,6 @@ export async function generateAIResponse(prompt: string, options: GenerateOption
   error?: string
 }> {
   try {
-    // Check rate limit
-    const rateLimit = await checkRateLimit(options.ip)
-    if (!rateLimit.allowed) {
-      return {
-        success: false,
-        message: '',
-        error: rateLimit.error
-      }
-    }
-
     // Basic input validation
     if (!prompt || prompt.length > 2000) {
       return {
@@ -32,10 +22,10 @@ export async function generateAIResponse(prompt: string, options: GenerateOption
         error: 'Invalid input length. Please keep your text under 500 characters.'
       }
     }
-
+    
     // Sanitize input
     const sanitizedPrompt = prompt.replace(/[<>]/g, '')
-
+    
     const response = await fetch('/api/generate', {
       method: 'POST',
       headers: {
@@ -48,13 +38,13 @@ export async function generateAIResponse(prompt: string, options: GenerateOption
         maxTokens: options.maxLength || 500
       })
     })
-
+    
     const data = await response.json()
-
+    
     if (!response.ok) {
       throw new Error(data.error || 'Failed to generate response')
     }
-
+    
     return {
       success: true,
       message: data.message
@@ -67,4 +57,13 @@ export async function generateAIResponse(prompt: string, options: GenerateOption
       error: error instanceof Error ? error.message : 'An unexpected error occurred'
     }
   }
+}
+
+export async function generateWithTimeout(prompt: string, maxTokens: number, timeoutMs: number = 8000) {
+  return Promise.race([
+    generateWithCohere(prompt, maxTokens),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Cohere API request timed out')), timeoutMs)
+    )
+  ]);
 }

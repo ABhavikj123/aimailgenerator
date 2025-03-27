@@ -1,15 +1,13 @@
 import { NextResponse } from 'next/server'
 
-// In-memory store with automatic cleanup
+// In-memory store for rate limiting
 const rateLimits = new Map<string, { count: number; timestamp: number }>()
-const DAILY_LIMIT = 2
+const DAILY_LIMIT = 1 // Adjust this limit as needed
 const CLEANUP_INTERVAL = 24 * 60 * 60 * 1000 // 24 hours
 
-// Cleanup function to remove old entries
+// Cleanup function to remove entries from previous days.
 function cleanup() {
-  const now = Date.now()
   const today = new Date().setHours(0, 0, 0, 0)
-  
   for (const [ip, data] of rateLimits.entries()) {
     if (data.timestamp < today) {
       rateLimits.delete(ip)
@@ -17,16 +15,16 @@ function cleanup() {
   }
 }
 
-// Run cleanup every 24 hours
+// Run cleanup every 24 hours.
 setInterval(cleanup, CLEANUP_INTERVAL)
 
 export async function POST(req: Request) {
   try {
     const { ip } = await req.json()
 
-    if (!ip) {
+    if (!ip || ip === 'unknown') {
       return NextResponse.json(
-        { error: 'IP address is required' },
+        { error: 'Valid IP address is required' },
         { status: 400 }
       )
     }
@@ -34,15 +32,16 @@ export async function POST(req: Request) {
     const now = Date.now()
     const today = new Date().setHours(0, 0, 0, 0)
     
-    // Get current rate limit data
+    // Retrieve current rate limit data or initialize it.
     const current = rateLimits.get(ip) || { count: 0, timestamp: now }
 
-    // Reset if it's a new day
+    // Reset counter if it's a new day.
     if (current.timestamp < today) {
       current.count = 0
       current.timestamp = now
     }
 
+    // Check if the daily limit is exceeded.
     if (current.count >= DAILY_LIMIT) {
       return NextResponse.json({
         allowed: false,
@@ -51,7 +50,7 @@ export async function POST(req: Request) {
       })
     }
 
-    // Increment counter
+    // Increment counter and save.
     current.count++
     rateLimits.set(ip, current)
 
@@ -66,4 +65,4 @@ export async function POST(req: Request) {
       { status: 500 }
     )
   }
-} 
+}

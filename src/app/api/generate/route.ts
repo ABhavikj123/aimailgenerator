@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { generateWithCohere } from '@/lib/cohere'
+import { generateWithCohere, generateWithTimeout } from '@/lib/cohere'
 import { getFirstPrompt } from '@/lib/prompts/firstResponse'
 
 export async function POST(req: Request) {
@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     }
 
     const prompt = getFirstPrompt({ jobDescription, additionalInfo, messageType })
-    const result = await generateWithCohere(prompt, maxTokens || 500)
+    const result = await generateWithTimeout(prompt, maxTokens || 500)
 
     return NextResponse.json(result)
   } catch (error) {
