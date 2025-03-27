@@ -56,16 +56,22 @@ export default function ResultPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <Button variant="outline" onClick={() => router.push('/main')} className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          onClick={() => router.push('/main')}
+          className="flex items-center gap-2"
+        >
           <ArrowLeft className="h-4 w-4" /> Back to Generator
         </Button>
       </div>
-      
+
       <div className="space-y-4">
-        <div className="p-6 bg-card rounded-lg border">
-          <div className="flex justify-between items-start mb-4">
-            <h2 className="text-2xl font-bold">Generated Message</h2>
-            <div className="flex gap-2">
+        <div className="p-6 bg-card rounded-lg border shadow-md">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4">
+            <h2 className="text-xl md:text-2xl font-bold mb-2 md:mb-0">
+              Generated Message
+            </h2>
+            <div className="flex flex-wrap gap-2">
               {!isEditing ? (
                 <>
                   <Button
@@ -112,10 +118,12 @@ export default function ResultPage() {
             <Textarea
               value={editedMessage}
               onChange={(e) => setEditedMessage(e.target.value)}
-              className="min-h-[300px] font-mono"
+              className="min-h-[200px] md:min-h-[300px] font-mono"
             />
           ) : (
-            <div className="whitespace-pre-wrap font-mono">{currentMessage}</div>
+            <div className="whitespace-pre-wrap font-mono text-sm md:text-base">
+              {currentMessage}
+            </div>
           )}
         </div>
       </div>
