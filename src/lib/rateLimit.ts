@@ -3,7 +3,7 @@ interface RateLimitEntry {
   timestamp: number
 }
 
-const DAILY_LIMIT = 2 // 2 requests per day
+const DAILY_LIMIT = 1 // 1 requests per day
 const STORAGE_KEY = 'rate_limit_data'
 
 function getRateLimits(): Record<string, RateLimitEntry> {
