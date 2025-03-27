@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 
 // In-memory store with automatic cleanup
 const rateLimits = new Map<string, { count: number; timestamp: number }>()
-const DAILY_LIMIT = 1
+const DAILY_LIMIT = 2
 const CLEANUP_INTERVAL = 24 * 60 * 60 * 1000 // 24 hours
 
 // Cleanup function to remove old entries
