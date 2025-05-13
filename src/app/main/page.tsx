@@ -97,7 +97,7 @@ export default function MainPage() {
     } catch (error:any) {
       if (error?.data?.error?.includes('Daily request limit reached') || 
           error?.message?.includes('Daily request limit reached')) {
-        setError("You've reached your daily limit of 1 message generations. Please try again tomorrow!")
+        setError("You've reached your daily limit of 2 message generations. Please try again tomorrow!")
       } else {
         setError("An error occurred while generating the message")
       }
@@ -124,7 +124,7 @@ export default function MainPage() {
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-blue-800">Usage Limit Notice</h3>
                 <div className="mt-2 text-sm text-blue-700">
-                  <p>To ensure fair usage during our testing phase, each user is limited to 1 message generations per day. This helps us maintain service quality and gather valuable feedback.</p>
+                  <p>To ensure fair usage during our testing phase, each user is limited to 2 message generations per day. This helps us maintain service quality and gather valuable feedback.</p>
                 </div>
               </div>
             </div>
